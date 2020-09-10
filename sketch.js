@@ -1,91 +1,80 @@
 //Create variables here
 var database;
 var dog1,dog2,dogIdle,dogHappy;
-var food,foodS,foodStock;
-var x;
+var feed,addFood;
+var fedTime,lastFed;
+var foodObj,foodS
+//foodStock,lastFed;
+
+//var milkImg,milk;
 
 function preload()
 {
   //load images here
   dogIdle=loadImage("images/dogImg-100 x 100.png");
   dogHappy=loadImage("images/dogImg1-200 x 200.png");
+  milkImg = loadImage("images/Milk-50 x 50.png")
 }
 
 function setup() {
    database = firebase.database();
   console.log(database);
-  createCanvas(500, 500);
+  createCanvas(1000, 1000);
+
+  foodObj = new food();
   
-  //dog2 = createSprite(240,240,10,10);
-  dog1 = createSprite(240,240,10,10);
-  dog1.addImage(dogIdle);
+  dog = createSprite(540,500,10,10);
+  dog.addImage(dogIdle);
 
-foodStock= database.ref('Food');
-foodStock.on("value",readStock);
+  feed = createButton("Feed the dog")
+  feed.position(700,95);
+  feed.mousePressed(feedDog);
 
-//console.log('/'.x);
-
+  addFood = createButton("Add the Food")
+  addFood.position(800,95);
+  addFood.mousePressed(addFoods);
+  
+  
 }
 
 
 function draw() {  
   background(46,139,87);
-  if(foodS !== undefined){
-  if(keyWentDown(UP_ARROW)){
-    //food = createSprite(240,5,10,10);
-    //food.velocityY = 2;
-    writeStock(foodS);
-    dog1.addImage(dogHappy);
-    //console.log(food.visible);
-    //dog2.visible = true;
-     //dog1.visible = false;
-    // if(food.isTouching(dog1)){
-     //food.visible = false;
-     }
-  
-//}
-   if(keyWentUp(UP_ARROW)){
-    dog1.addImage(dogIdle);
-    //food.velocityY = 0;
-    //dog1.visible = true;
-    //dog2.visible = false;
-  }
-  //if(x=0  ){
-    //dog1.aadImage(dogHappy);
-    //textSize(20);
-    //text("Game Over",100,100)  
-  //}
-  }
-  drawSprites();
-  textSize(20);
-  text("Press up Arrow to feed",100,100);
-  //text("Food:" + x,400,400)
-  //add styles here
 
-}
+  //foodS = new food();
+  foodObj.display();
 
-
-
-function readStock(data){
-  foodS = data.val();
-}
-
-function writeStock(x){
-  //if(keyWentDown(UP_ARROW)){
-    //x= x-1;
-  //}
-  console.log(x);
-  if(x<=0){
-    //x=0;
-    //x=x+1
-    x = 0;
-  } else {
-    x = x-1 ;
-  }
- 
-  database.ref('/').update({
-    'Food' : x
+  fedTime = database.ref('FeedTime')
+  fedTime.on('value',(data)=>{
+    lastFed = data.val();
   })
+
+}
+
+//function readStock(data){
+  //foodS = data.val();
+  //console.log(foodS);
+//}
+
+
+function addFoods(){
+  foodS ++ ;
+   database.ref('/').update({
+     Food : foodS
+   })
+}
+function feedDog(){
+  dog.addImage(dogHappy);
+
+  foodObj.updateFoodStock(foodObj.getFoodStock()-1);
+    database.ref('/').set({
+      Food : foodObj.getFoodStock,
+      FeedTime : hour()
+    })
+  
+
+
+
 }
 
 
