@@ -1,17 +1,23 @@
 //Create variables here
 var database;
-var dogIdle,dogHappy;
+var dogIdle,dogHappy,dogSad;
 var addFood,feed;
 var fedTime, lastFed;
 var foodObj;
 var foodS,foodStock;
-
+var bedroomImg,gardenImg,washroomImg;
+var gameState;
+var currentTime;
 
 function preload()
 {
   //load images here
   dogIdle=loadImage("images/dogImg-100 x 100.png");
   dogHappy=loadImage("images/dogImg1-200 x 200.png");
+  bedroomImg = loadImage("images/BedRoom.png");
+  gardenImg = loadImage("images/Garden.png");
+  washroomImg = loadImage("images/WashRoom.png");
+  dogSad = loadImage("images/Lazy.png");
 }
 
 function setup() {
@@ -50,14 +56,35 @@ function draw() {
     lastFed = data.val();
  })
 
- if(lastFed>=12){
-   text("Last Feed :"+ lastFed%12 + "PM", 350,30);
- } else if(lastFed == 0){
-         text("Last Fed : 12 A.M",350,30);
+ readState = database.ref('gameState');
+ readState.on("value",(data)=>{
+   gameState = data.val();
+ })
+
+ if(gameState !== "Hungry"){
+   feed.hide();
+   addFood.hide();
+   //dog.remove();
  } else {
-  text("Last Feed :"+ lastFed + "AM", 350,30);
+   feed.show();
+   addFood.show();
+   //dog.addImage(dogIdle);
  }
 
+ currentTime = hour();
+ if(currentTime === (lastFed+1)){
+   update("playing");
+   foodObj.garden();
+ } else if(currentTime === (lastFed+2)){
+   update("sleeping")
+   foodObj.bedroom();
+ } else if(currentTime>(lastFed+2) && currentTime<=(lastFed+4)){
+   update("bathing");
+   foodObj.washroom();
+ } else {
+   update("Hungry");
+   foodObj.display();
+ }
 //}
 
 //if(keyWentDown(UP_ARROW)){
@@ -67,7 +94,7 @@ function draw() {
   //dog.addImage(dogIdle);
 //}
 
-foodObj.display();
+//foodObj.display();
 
 
 textSize(20);
@@ -78,10 +105,21 @@ drawSprites();
 
 //addFoods();
 //feedDog();
+if(lastFed>=12){
+  text("Last Fed :"+ lastFed%12 + "PM", 810,30);
+} else if(lastFed == 0){
+        text("Last Fed : 12 A.M",810,30);
+} else {
+ text("Last Fed :"+ lastFed + "AM", 810,30);
+}
 
-
-text("Press UP arrow to feed the dog",380,55);
+//text("Press UP arrow to feed the dog",380,55);
 text("Remaining food : " + foodS , 434, 250 );
+
+if(foodS<=0){
+  foodS = 0;
+  //update("Hungry")
+}
 
 }
 
@@ -104,6 +142,11 @@ function readStock(data){
   //})
 //}
 
+function update(state){
+  database.ref('/').update({
+    gameState : state
+  })
+}
 
 function addFoods(){
   foodS ++ ;
@@ -122,7 +165,7 @@ function feedDog(){
      FeedTime : hour()
     })
 
-  
+ 
   }
 
 
